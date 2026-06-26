@@ -1383,7 +1383,7 @@ class NumbaBackend(NumpyBackend):
         )
 
     def make_gaussian_noise(
-        self, field: TField, *, rng: np.random.Generator
+        self, field: TField, *, rng: np.random.Generator, shape: tuple[int, ...] = None
     ) -> Callable[[], NumericArray]:
         """Create a function generating Gaussian white noise.
 
@@ -1395,12 +1395,14 @@ class NumbaBackend(NumpyBackend):
                 Random number generator (default: :func:`~numpy.random.default_rng()`).
                 Not used in this numba backend.
         """
-        data_shape: tuple[int, ...] = field.data.shape
+
+        if shape == None:
+            shape = field.data.shape
 
         @self.compile_function
         def gaussian_noise() -> NumericArray:
             """Generate Gaussian white noise."""
-            return np.random.randn(*data_shape)
+            return np.random.randn(*shape)
 
         return gaussian_noise
 

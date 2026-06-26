@@ -712,7 +712,7 @@ class BackendBase(Generic[TNativeArray]):
         return synchronize_value
 
     def make_gaussian_noise(
-        self, field: TField, *, rng: np.random.Generator
+        self, field: TField, *, rng: np.random.Generator, shape: tuple[int, ...] = None
     ) -> Callable[[], TNativeArray]:
         """Create a function generating Gaussian white noise.
 

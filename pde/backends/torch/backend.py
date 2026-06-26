@@ -604,7 +604,7 @@ class TorchBackend(BackendBase[torch.Tensor]):
         return self.compile_function(result, to_device=True)
 
     def make_gaussian_noise(
-        self, field: TField, *, rng: np.random.Generator
+        self, field: TField, *, rng: np.random.Generator, shape: tuple[int, ...] = None
     ) -> Callable[[], torch.Tensor]:
         """Create a function generating Gaussian white noise.
 
@@ -618,12 +618,14 @@ class TorchBackend(BackendBase[torch.Tensor]):
         """
         from .utils import TorchGaussianNoise
 
-        data_shape: tuple[int, ...] = field.data.shape
+        if shape == None:
+            shape = field.data.shape
+
         generator = torch.Generator(device=self.device)
         generator.manual_seed(int(rng.integers(0, 2**32)))
 
         return TorchGaussianNoise(
-            data_shape, dtype=self.get_numpy_dtype(field.dtype), generator=generator
+            shape, dtype=self.get_numpy_dtype(field.dtype), generator=generator
         ).to(self.device)
 
     def make_stepper(self, solver: SolverBase, state: TField) -> StepperType:
