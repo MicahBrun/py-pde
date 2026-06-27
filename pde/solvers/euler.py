@@ -96,6 +96,7 @@ class EulerSolver(AdaptiveSolverBase):
                 state, backend=self.backend
             )
             gaussian_noise = self.backend.make_gaussian_noise(state, rng=self.pde.rng, noise_channels=noise_channels)
+            noise_var = _DUMMY_FUNCTION_2ARGS
         else:
             noise_var = _DUMMY_FUNCTION_2ARGS
             gaussian_noise = self.backend.compile_function(_DUMMY_FUNCTION)
