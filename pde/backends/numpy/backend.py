@@ -386,7 +386,7 @@ class NumpyBackend(BackendBase[NumericArray]):
         return pde_rhs
 
     def make_gaussian_noise(
-        self, field: TField, *, rng: np.random.Generator, shape: tuple[int, ...] = None
+        self, field: TField, *, rng: np.random.Generator, noise_channels: int = None
     ) -> Callable[[], NumericArray]:
         """Create a function generating Gaussian white noise.
 
@@ -397,8 +397,10 @@ class NumpyBackend(BackendBase[NumericArray]):
             rng (:class:`~numpy.random.Generator`):
                 Random number generator (default: :func:`~numpy.random.default_rng()`).
         """
-        if shape == None:
+        if noise_channels == None:
             shape = field.data.shape
+        else:
+            shape = (noise_channels, ) + field.data.shape[1:]
 
         def gaussian_noise() -> NumericArray:
             """Generate Gaussian white noise."""

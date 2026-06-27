@@ -864,7 +864,7 @@ class JaxBackend(BackendBase[jax.Array]):
         return self.compile_function(rhs_native)
 
     def make_gaussian_noise(
-        self, field: TField, *, rng: np.random.Generator, shape: tuple[int, ...] = None
+        self, field: TField, *, rng: np.random.Generator, noise_channels: int = None
     ) -> Callable[[], jax.Array]:
         """Create a function generating Gaussian white noise.
 
@@ -879,8 +879,10 @@ class JaxBackend(BackendBase[jax.Array]):
         from jax import random as jrandom
         from jax.experimental.random import stateful_rng
 
-        if shape == None:
+        if noise_channels == None:
             shape = field.data.shape
+        else:
+            shape = (noise_channels, ) + field.data.shape[1:]
 
         # make sure the data is created on the right device
         with jax.default_device(self.device):

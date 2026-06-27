@@ -604,7 +604,7 @@ class TorchBackend(BackendBase[torch.Tensor]):
         return self.compile_function(result, to_device=True)
 
     def make_gaussian_noise(
-        self, field: TField, *, rng: np.random.Generator, shape: tuple[int, ...] = None
+        self, field: TField, *, rng: np.random.Generator, noise_channels: int = None
     ) -> Callable[[], torch.Tensor]:
         """Create a function generating Gaussian white noise.
 
@@ -618,8 +618,10 @@ class TorchBackend(BackendBase[torch.Tensor]):
         """
         from .utils import TorchGaussianNoise
 
-        if shape == None:
+        if noise_channels == None:
             shape = field.data.shape
+        else:
+            shape = (noise_channels, ) + field.data.shape[1:]
 
         generator = torch.Generator(device=self.device)
         generator.manual_seed(int(rng.integers(0, 2**32)))
