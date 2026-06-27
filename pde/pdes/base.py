@@ -102,6 +102,9 @@ class PDEBase(metaclass=ABCMeta):
     many cases, PDEs are defined locally and no such synchronization is necessary. Note
     that the virtual points at the boundaries are synchronized automatically."""
 
+    use_noise_coefficient: bool = False
+    """bool: Flag indicating that a stochastic differential equation should be solved
+    with noise given via :meth:`~pde.pdes.base.SDEBase.make_noise_coefficient`."""
     use_noise_variance: bool = False
     """bool: Flag indicating that a stochastic differential equation should be solved
     with noise given via :meth:`~pde.pdes.base.SDEBase.make_noise_variance`."""

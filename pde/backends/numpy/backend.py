@@ -404,7 +404,7 @@ class NumpyBackend(BackendBase[NumericArray]):
 
         def gaussian_noise() -> NumericArray:
             """Generate Gaussian white noise."""
-            return rng.standard_normal(data_shape)
+            return rng.standard_normal(shape)
 
         return gaussian_noise
 

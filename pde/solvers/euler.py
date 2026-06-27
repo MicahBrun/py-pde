@@ -85,11 +85,17 @@ class EulerSolver(AdaptiveSolverBase):
         # handle with first noise interface based on supplying the noise variance
         noise_drift_factor = self.pde._noise_drift_factor
         has_noise_drift_term = noise_drift_factor != 0
+
         if use_noise_variance := self.pde.use_noise_variance:
             noise_var = self.pde.make_noise_variance(  # type: ignore
                 state, backend=self.backend, ret_diff=has_noise_drift_term
             )
             gaussian_noise = self.backend.make_gaussian_noise(state, rng=self.pde.rng)
+        elif use_noise_coefficient := self.pde.use_noise_coefficient:
+            noise_coeff, noise_channels = self.pde.make_noise_coefficient(
+                state, backend=self.backend
+            )
+            gaussian_noise = self.backend.make_gaussian_noise(state, rng=self.pde.rng, noise_channels=noise_channels)
         else:
             noise_var = _DUMMY_FUNCTION_2ARGS
             gaussian_noise = self.backend.compile_function(_DUMMY_FUNCTION)
@@ -128,7 +134,6 @@ class EulerSolver(AdaptiveSolverBase):
 
             # apply the deterministic part and the additive noise
             state_data += dt * evolution_rate
-
             if use_noise_variance:
                 dW = gaussian_noise()
                 state_data += dt_sqrt * nx.sqrt(noise_var_field * inv_cell) * dW
@@ -138,6 +143,10 @@ class EulerSolver(AdaptiveSolverBase):
                     state_data += (
                         0.5 * dt * noise_drift_factor * noise_var_diff_field * inv_cell
                     )
+            elif use_noise_coefficient:
+                noise_coeff_tensor = noise_coeff(state_data, t)
+                dW = dt_sqrt * nx.sqrt(inv_cell) * gaussian_noise()
+                state_data += self.apply_noise_coefficient_tensor(state_data, noise_coeff_tensor, dW)
 
             return state_data
 
@@ -145,6 +154,14 @@ class EulerSolver(AdaptiveSolverBase):
             "Initialize explicit Euler-Maruyama single-step update with dt=%g", dt
         )
         return single_step
+    
+    def apply_noise_coefficient_tensor(self, state_data, noise_coeff, dW):
+        noise_channels = dW.shape[0]
+        dW_flat = dW.reshape(noise_channels, -1)
+
+        noise_flat = noise_coeff @ dW_flat
+        return noise_flat.reshape(state_data.shape)
+        
 
     def _make_single_step_fixed_dt(
         self, state: TField, dt: float
